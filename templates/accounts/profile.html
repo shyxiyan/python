@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}个人资料 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">个人资料</h4>
+            </div>
+            <div class="card-body text-center">
+                {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="用户头像" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" alt="默认头像" class="rounded-circle img-fluid mb-3">
+                {% endif %}
+                <h5>{{ user.username }}</h5>
+                <p class="text-muted">{{ user.email }}</p>
+                {% if user.profile.phone %}
+                    <p><i class="fas fa-phone mr-2"></i>{{ user.profile.phone }}</p>
+                {% endif %}
+                {% if user.profile.bio %}
+                    <p><i class="fas fa-info-circle mr-2"></i>{{ user.profile.bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">修改资料</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary btn-block mt-3">保存修改</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="sold-tab" data-toggle="tab" href="#sold" role="tab">我卖出的</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="bought-tab" data-toggle="tab" href="#bought" role="tab">我买到的</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab">收到的评价</a>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="profileTabsContent">
+            <div class="tab-pane fade show active" id="sold" role="tabpanel">
+                {% if sold_transactions %}
+                    <div class="list-group">
+                        {% for transaction in sold_transactions %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ transaction.item.title }}</h5>
+                                    <small>{{ transaction.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">价格: ¥{{ transaction.item.price }}</p>
+                                <p class="mb-1">买家: {{ transaction.buyer.username }}</p>
+                                <p class="mb-1">
+                                    状态: 
+                                    {% if transaction.status == 'pending' %}
+                                        <span class="badge badge-warning">等待确认</span>
+                                    {% elif transaction.status == 'accepted' %}
+                                        <span class="badge badge-info">已接受</span>
+                                    {% elif transaction.status == 'rejected' %}
+                                        <span class="badge badge-danger">已拒绝</span>
+                                    {% elif transaction.status == 'completed' %}
+                                        <span class="badge badge-success">已完成</span>
+                                    {% elif transaction.status == 'cancelled' %}
+                                        <span class="badge badge-secondary">已取消</span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'marketplace:transaction_detail' transaction.id %}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">您还没有卖出任何商品</div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-pane fade" id="bought" role="tabpanel">
+                {% if bought_transactions %}
+                    <div class="list-group">
+                        {% for transaction in bought_transactions %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ transaction.item.title }}</h5>
+                                    <small>{{ transaction.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">价格: ¥{{ transaction.item.price }}</p>
+                                <p class="mb-1">卖家: {{ transaction.seller.username }}</p>
+                                <p class="mb-1">
+                                    状态: 
+                                    {% if transaction.status == 'pending' %}
+                                        <span class="badge badge-warning">等待确认</span>
+                                    {% elif transaction.status == 'accepted' %}
+                                        <span class="badge badge-info">已接受</span>
+                                    {% elif transaction.status == 'rejected' %}
+                                        <span class="badge badge-danger">已拒绝</span>
+                                    {% elif transaction.status == 'completed' %}
+                                        <span class="badge badge-success">已完成</span>
+                                    {% elif transaction.status == 'cancelled' %}
+                                        <span class="badge badge-secondary">已取消</span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'marketplace:transaction_detail' transaction.id %}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                                
+                                {% if transaction.status == 'completed' and not transaction.reviews.filter.reviewer == user %}
+                                    <a href="{% url 'accounts:add_review' transaction.id %}" class="btn btn-sm btn-outline-success">评价卖家</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">您还没有购买任何商品</div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-pane fade" id="reviews" role="tabpanel">
+                {% if reviews %}
+                    <div class="list-group">
+                        {% for review in reviews %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </h5>
+                                    <small>{{ review.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">{{ review.comment }}</p>
+                                <small>评价人: {{ review.reviewer.username }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">您还没有收到任何评价</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

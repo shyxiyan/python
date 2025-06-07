@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}我的消息 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h3>我的消息</h3>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">联系人</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="contactList">
+                    {% for contact in contacts %}
+                        <a href="#" class="list-group-item list-group-item-action contact-item" data-user-id="{{ contact.id }}">
+                            <div class="d-flex align-items-center">
+                                {% if contact.profile.avatar %}
+                                    <img src="{{ contact.profile.avatar.url }}" alt="{{ contact.username }}" class="rounded-circle mr-2" style="width: 40px; height: 40px;">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/40" alt="默认头像" class="rounded-circle mr-2">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ contact.username }}</h6>
+                                    <small class="text-muted">
+                                        {% if contact.unread_count > 0 %}
+                                            <span class="badge badge-danger">{{ contact.unread_count }} 条未读</span>
+                                        {% else %}
+                                            <span class="text-muted">没有未读消息</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            暂无联系人
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0" id="messageHeader">消息</h4>
+            </div>
+            <div class="card-body">
+                <div id="messageContainer">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>选择一个联系人开始聊天</p>
+                    </div>
+                </div>
+                
+                <div id="messageForm" style="display: none;">
+                    <form id="sendMessageForm" method="post" action="">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <textarea name="content" id="id_content" class="form-control" rows="3" placeholder="输入消息内容..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane mr-1"></i>发送
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 点击联系人加载消息
+        $('.contact-item').click(function(e) {
+            e.preventDefault();
+            
+            // 高亮选中的联系人
+            $('.contact-item').removeClass('active');
+            $(this).addClass('active');
+            
+            const userId = $(this).data('user-id');
+            const username = $(this).find('h6').text();
+            
+            // 更新消息标题
+            $('#messageHeader').text('与 ' + username + ' 的对话');
+            
+            // 显示消息表单
+            $('#messageForm').show();
+            $('#sendMessageForm').attr('action', '/send-message/' + userId + '/');
+            
+            // 加载消息
+            $.ajax({
+                url: '/my-messages/?user_id=' + userId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    let messagesHtml = '';
+                    
+                    if (data.messages.length === 0) {
+                        messagesHtml = '<div class="text-center text-muted py-3"><p>暂无消息记录</p></div>';
+                    } else {
+                        messagesHtml = '<div class="messages-container mb-4">';
+                        
+                        data.messages.forEach(function(message) {
+                            const isCurrentUser = message.sender_id === data.current_user_id;
+                            const messageClass = isCurrentUser ? 'text-right' : 'text-left';
+                            const bubbleClass = isCurrentUser ? 'bg-primary text-white' : 'bg-light';
+                            
+                            messagesHtml += `
+                                <div class="message ${messageClass} mb-3">
+                                    <div class="message-bubble ${bubbleClass} d-inline-block p-2 px-3 rounded">
+                                        <p class="mb-0">${message.content}</p>
+                                        <small class="message-time">${message.created_at}</small>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        messagesHtml += '</div>';
+                    }
+                    
+                    $('#messageContainer').html(messagesHtml);
+                    
+                    // 滚动到底部
+                    const container = document.querySelector('.messages-container');
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+            });
+        });
+        
+        // 发送消息
+        $('#sendMessageForm').submit(function(e) {
+            e.preventDefault();
+            
+            const form = $(this);
+            const url = form.attr('action');
+            const content = $('#id_content').val();
+            
+            if (!content.trim()) {
+                return;
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    'content': content,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(data) {
+                    // 清空输入框
+                    $('#id_content').val('');
+                    
+                    // 添加新消息到消息列表
+                    const messagesContainer = $('.messages-container');
+                    
+                    if (messagesContainer.length === 0) {
+                        // 如果没有消息容器，创建一个
+                        $('#messageContainer').html('<div class="messages-container mb-4"></div>');
+                    }
+                    
+                    // 添加新消息
+                    $('.messages-container').append(`
+                        <div class="message text-right mb-3">
+                            <div class="message-bubble bg-primary text-white d-inline-block p-2 px-3 rounded">
+                                <p class="mb-0">${content}</p>
+                                <small class="message-time">刚刚</small>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // 滚动到底部
+                    const container = document.querySelector('.messages-container');
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

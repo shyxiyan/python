@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}我的交易 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h3>我的交易</h3>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">我买到的</h4>
+            </div>
+            <div class="card-body">
+                {% if bought_transactions %}
+                    <div class="list-group">
+                        {% for transaction in bought_transactions %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ transaction.item.title }}</h5>
+                                    <small>{{ transaction.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">价格: ¥{{ transaction.item.price }}</p>
+                                <p class="mb-1">卖家: {{ transaction.seller.username }}</p>
+                                <p class="mb-1">
+                                    状态: 
+                                    {% if transaction.status == 'pending' %}
+                                        <span class="badge badge-warning">等待确认</span>
+                                    {% elif transaction.status == 'accepted' %}
+                                        <span class="badge badge-info">已接受</span>
+                                    {% elif transaction.status == 'rejected' %}
+                                        <span class="badge badge-danger">已拒绝</span>
+                                    {% elif transaction.status == 'completed' %}
+                                        <span class="badge badge-success">已完成</span>
+                                    {% elif transaction.status == 'cancelled' %}
+                                        <span class="badge badge-secondary">已取消</span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'marketplace:transaction_detail' transaction.id %}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                                
+                                {% if transaction.status == 'completed' and not transaction.reviews.filter.reviewer == user %}
+                                    <a href="{% url 'accounts:add_review' transaction.id %}" class="btn btn-sm btn-outline-success">评价卖家</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">您还没有购买任何商品</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">我卖出的</h4>
+            </div>
+            <div class="card-body">
+                {% if sold_transactions %}
+                    <div class="list-group">
+                        {% for transaction in sold_transactions %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ transaction.item.title }}</h5>
+                                    <small>{{ transaction.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">价格: ¥{{ transaction.item.price }}</p>
+                                <p class="mb-1">买家: {{ transaction.buyer.username }}</p>
+                                <p class="mb-1">
+                                    状态: 
+                                    {% if transaction.status == 'pending' %}
+                                        <span class="badge badge-warning">等待确认</span>
+                                    {% elif transaction.status == 'accepted' %}
+                                        <span class="badge badge-info">已接受</span>
+                                    {% elif transaction.status == 'rejected' %}
+                                        <span class="badge badge-danger">已拒绝</span>
+                                    {% elif transaction.status == 'completed' %}
+                                        <span class="badge badge-success">已完成</span>
+                                    {% elif transaction.status == 'cancelled' %}
+                                        <span class="badge badge-secondary">已取消</span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'marketplace:transaction_detail' transaction.id %}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                                
+                                {% if transaction.status == 'pending' %}
+                                    <a href="{% url 'marketplace:transaction_update' transaction.id %}" class="btn btn-sm btn-outline-success">处理请求</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">您还没有卖出任何商品</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

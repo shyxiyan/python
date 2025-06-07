@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}我的收藏 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h3>我的收藏</h3>
+    </div>
+    
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">收藏的商品</h4>
+            </div>
+            <div class="card-body">
+                {% if favorites %}
+                    <div class="row">
+                        {% for favorite in favorites %}
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="card h-100">
+                                    {% if favorite.item.images.first %}
+                                        <img src="{{ favorite.item.images.first.image.url }}" class="card-img-top" alt="{{ favorite.item.title }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/300x180?text=无图片" class="card-img-top" alt="无图片">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title text-truncate">{{ favorite.item.title }}</h5>
+                                        <p class="card-text text-danger">¥{{ favorite.item.price }}</p>
+                                        <p class="card-text">
+                                            <span class="badge badge-{% if favorite.item.status == 'available' %}success{% elif favorite.item.status == 'sold' %}secondary{% elif favorite.item.status == 'reserved' %}warning{% else %}danger{% endif %}">
+                                                {% if favorite.item.status == 'available' %}可购买{% elif favorite.item.status == 'sold' %}已售出{% elif favorite.item.status == 'reserved' %}已预订{% else %}已下架{% endif %}
+                                            </span>
+                                        </p>
+                                        <p class="card-text text-muted small">
+                                            <i class="fas fa-user mr-1"></i>{{ favorite.item.user.username }}
+                                            <span class="float-right"><i class="far fa-clock mr-1"></i>{{ favorite.created_at|date:"m-d" }}</span>
+                                        </p>
+                                    </div>
+                                    <div class="card-footer bg-white">
+                                        <div class="btn-group w-100">
+                                            <a href="{% url 'marketplace:item_detail' favorite.item.id %}" class="btn btn-sm btn-primary">查看详情</a>
+                                            <a href="{% url 'marketplace:toggle_favorite' favorite.item.id %}" class="btn btn-sm btn-danger">取消收藏</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        您还没有收藏任何商品，<a href="{% url 'marketplace:item_list' %}">去浏览商品</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

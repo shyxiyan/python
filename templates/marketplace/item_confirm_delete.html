@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}确认删除 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">确认删除</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">您确定要删除商品 "{{ item.title }}" 吗？</p>
+                <p class="text-danger">此操作不可逆，删除后将无法恢复。</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'marketplace:item_detail' item.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i>取消
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt mr-1"></i>确认删除
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

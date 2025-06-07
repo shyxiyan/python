@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if item %}编辑商品{% else %}发布商品{% endif %} - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{% if item %}编辑商品{% else %}发布商品{% endif %}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="form-group">
+                        <label for="id_image">商品图片</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="id_image" name="image" multiple accept="image/*">
+                            <label class="custom-file-label" for="id_image">选择图片（可多选）</label>
+                        </div>
+                        <small class="form-text text-muted">可以选择多张图片，建议上传清晰的商品照片</small>
+                    </div>
+                    
+                    {% if item and item.images.all %}
+                        <div class="form-group">
+                            <label>已上传图片</label>
+                            <div class="row">
+                                {% for image in item.images.all %}
+                                    <div class="col-md-3 col-6 mb-3">
+                                        <img src="{{ image.image.url }}" alt="商品图片" class="img-thumbnail" style="height: 150px; object-fit: cover;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary btn-block mt-4">
+                        {% if item %}保存修改{% else %}发布商品{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 显示选择的文件名
+    $('.custom-file-input').on('change', function() {
+        var fileCount = $(this)[0].files.length;
+        if (fileCount > 0) {
+            $(this).next('.custom-file-label').html(fileCount + ' 张图片已选择');
+        } else {
+            $(this).next('.custom-file-label').html('选择图片（可多选）');
+        }
+    });
+</script>
+{% endblock %}

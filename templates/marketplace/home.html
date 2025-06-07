@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<!-- 轮播图 -->
+<div id="homeCarousel" class="carousel slide mb-4" data-ride="carousel">
+    <ol class="carousel-indicators">
+        <li data-target="#homeCarousel" data-slide-to="0" class="active"></li>
+        <li data-target="#homeCarousel" data-slide-to="1"></li>
+        <li data-target="#homeCarousel" data-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner rounded">
+        <div class="carousel-item active">
+            <img src="https://via.placeholder.com/1200x400?text=校园二手交易平台" class="d-block w-100" alt="轮播图1">
+            <div class="carousel-caption d-none d-md-block">
+                <h2>欢迎来到校园二手交易平台</h2>
+                <p>为校园师生提供便捷的二手物品交易服务</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://via.placeholder.com/1200x400?text=买卖二手物品" class="d-block w-100" alt="轮播图2">
+            <div class="carousel-caption d-none d-md-block">
+                <h2>买卖二手物品</h2>
+                <p>闲置物品变废为宝，需要物品低价购买</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://via.placeholder.com/1200x400?text=安全可靠" class="d-block w-100" alt="轮播图3">
+            <div class="carousel-caption d-none d-md-block">
+                <h2>安全可靠</h2>
+                <p>校内交易，安全可靠，用户评价系统保障交易质量</p>
+            </div>
+        </div>
+    </div>
+    <a class="carousel-control-prev" href="#homeCarousel" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="sr-only">上一个</span>
+    </a>
+    <a class="carousel-control-next" href="#homeCarousel" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="sr-only">下一个</span>
+    </a>
+</div>
+
+<!-- 快速搜索 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{% url 'marketplace:item_list' %}" method="get" class="form-inline justify-content-center">
+            <div class="input-group w-75">
+                <input type="text" name="query" class="form-control" placeholder="搜索商品...">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 分类导航 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h3 class="mb-3">商品分类</h3>
+    </div>
+    {% for category in categories %}
+    <div class="col-md-3 col-6 mb-3">
+        <a href="{% url 'marketplace:item_list' %}?category={{ category.id }}" class="text-decoration-none">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-tags fa-2x mb-2 text-primary"></i>
+                    <h5 class="card-title">{{ category.name }}</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">暂无商品分类</div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 最新商品 -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>最新上架</h3>
+            <a href="{% url 'marketplace:item_list' %}" class="btn btn-outline-primary">查看全部</a>
+        </div>
+    </div>
+    
+    {% for item in latest_items %}
+    <div class="col-md-3 col-6 mb-4">
+        <div class="card h-100">
+            {% if item.images.first %}
+                <img src="{{ item.images.first.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 180px; object-fit: cover;">
+            {% else %}
+                <img src="https://via.placeholder.com/300x180?text=无图片" class="card-img-top" alt="无图片">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title text-truncate">{{ item.title }}</h5>
+                <p class="card-text text-danger">¥{{ item.price }}</p>
+                <p class="card-text text-muted small">
+                    <i class="fas fa-user mr-1"></i>{{ item.user.username }}
+                    <span class="float-right"><i class="far fa-clock mr-1"></i>{{ item.created_at|date:"m-d" }}</span>
+                </p>
+            </div>
+            <div class="card-footer bg-white">
+                <a href="{% url 'marketplace:item_detail' item.id %}" class="btn btn-sm btn-primary btn-block">查看详情</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">暂无商品</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

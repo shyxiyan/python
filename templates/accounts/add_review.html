@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}添加评价 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">评价用户</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5>交易信息</h5>
+                    <p><strong>商品：</strong>{{ transaction.item.title }}</p>
+                    <p><strong>价格：</strong>¥{{ transaction.item.price }}</p>
+                    <p><strong>评价对象：</strong>{{ reviewee.username }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary btn-block mt-4">提交评价</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

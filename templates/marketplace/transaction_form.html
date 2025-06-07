@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}创建交易 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">确认购买</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if item.images.first %}
+                            <img src="{{ item.images.first.image.url }}" alt="{{ item.title }}" class="mr-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <img src="https://via.placeholder.com/80" alt="无图片" class="mr-3">
+                        {% endif %}
+                        <div>
+                            <h5>{{ item.title }}</h5>
+                            <p class="text-danger mb-0">¥{{ item.price }}</p>
+                        </div>
+                    </div>
+                    
+                    <p><strong>卖家：</strong>{{ item.user.username }}</p>
+                    <p><strong>商品状态：</strong>{{ item.get_condition_display }}</p>
+                    <p><strong>商品描述：</strong>{{ item.description|truncatechars:100 }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>提交购买请求后，卖家将收到通知并决定是否接受您的请求。
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block mt-4">
+                        <i class="fas fa-shopping-cart mr-1"></i>确认购买
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

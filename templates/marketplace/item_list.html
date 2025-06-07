@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}商品列表 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 筛选栏 -->
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">筛选条件</h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary btn-block mt-3">
+                        <i class="fas fa-filter mr-2"></i>筛选
+                    </button>
+                    <a href="{% url 'marketplace:item_list' %}" class="btn btn-outline-secondary btn-block mt-2">
+                        <i class="fas fa-redo mr-2"></i>重置
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 商品列表 -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>商品列表</h3>
+            <div>
+                <span class="text-muted">共 {{ page_obj.paginator.count }} 件商品</span>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for item in page_obj %}
+                <div class="col-md-4 col-6 mb-4">
+                    <div class="card h-100">
+                        {% if item.images.first %}
+                            <img src="{{ item.images.first.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x180?text=无图片" class="card-img-top" alt="无图片">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">{{ item.title }}</h5>
+                            <p class="card-text text-danger">¥{{ item.price }}</p>
+                            <p class="card-text">
+                                <span class="badge badge-{% if item.condition == 'new' %}success{% elif item.condition == 'like_new' %}info{% elif item.condition == 'good' %}primary{% elif item.condition == 'fair' %}warning{% else %}danger{% endif %}">
+                                    {{ item.get_condition_display }}
+                                </span>
+                                <span class="badge badge-secondary">{{ item.category.name }}</span>
+                            </p>
+                            <p class="card-text text-muted small">
+                                <i class="fas fa-user mr-1"></i>{{ item.user.username }}
+                                <span class="float-right"><i class="far fa-clock mr-1"></i>{{ item.created_at|date:"m-d" }}</span>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a href="{% url 'marketplace:item_detail' item.id %}" class="btn btn-sm btn-primary btn-block">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">没有找到符合条件的商品</div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- 分页 -->
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

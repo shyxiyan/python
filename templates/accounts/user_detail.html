@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}用户详情 - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">用户资料</h4>
+            </div>
+            <div class="card-body text-center">
+                {% if profile_user.profile.avatar %}
+                    <img src="{{ profile_user.profile.avatar.url }}" alt="用户头像" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" alt="默认头像" class="rounded-circle img-fluid mb-3">
+                {% endif %}
+                <h5>{{ profile_user.username }}</h5>
+                
+                <div class="my-3">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= profile_user.profile.rating %}
+                            <i class="fas fa-star text-warning"></i>
+                        {% else %}
+                            <i class="far fa-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="ml-2">{{ profile_user.profile.rating|floatformat:1 }}</span>
+                </div>
+                
+                {% if user.is_authenticated and user != profile_user %}
+                    <a href="{% url 'marketplace:send_message' profile_user.id %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-envelope mr-2"></i>发送消息
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">用户评价</h4>
+            </div>
+            <div class="card-body">
+                {% if reviews %}
+                    <div class="list-group">
+                        {% for review in reviews %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </h5>
+                                    <small>{{ review.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">{{ review.comment }}</p>
+                                <small>评价人: {{ review.reviewer.username }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">该用户还没有收到任何评价</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

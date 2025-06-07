@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }} - 校园二手交易平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 商品图片 -->
+    <div class="col-md-6 mb-4">
+        <div id="itemCarousel" class="carousel slide" data-ride="carousel">
+            <ol class="carousel-indicators">
+                {% for image in item.images.all %}
+                    <li data-target="#itemCarousel" data-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></li>
+                {% empty %}
+                    <li data-target="#itemCarousel" data-slide-to="0" class="active"></li>
+                {% endfor %}
+            </ol>
+            <div class="carousel-inner rounded">
+                {% for image in item.images.all %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ item.title }}" style="height: 400px; object-fit: contain;">
+                    </div>
+                {% empty %}
+                    <div class="carousel-item active">
+                        <img src="https://via.placeholder.com/600x400?text=无图片" class="d-block w-100" alt="无图片">
+                    </div>
+                {% endfor %}
+            </div>
+            {% if item.images.count > 1 %}
+                <a class="carousel-control-prev" href="#itemCarousel" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">上一个</span>
+                </a>
+                <a class="carousel-control-next" href="#itemCarousel" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">下一个</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 商品信息 -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">商品信息</h4>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">{{ item.title }}</h3>
+                <h4 class="text-danger mb-3">¥{{ item.price }}</h4>
+                
+                <div class="mb-3">
+                    <span class="badge badge-{% if item.condition == 'new' %}success{% elif item.condition == 'like_new' %}info{% elif item.condition == 'good' %}primary{% elif item.condition == 'fair' %}warning{% else %}danger{% endif %} mr-2">
+                        {{ item.get_condition_display }}
+                    </span>
+                    <span class="badge badge-secondary">{{ item.category.name }}</span>
+                </div>
+                
+                <p class="card-text">
+                    <i class="far fa-clock mr-2"></i>发布时间：{{ item.created_at|date:"Y-m-d H:i" }}
+                </p>
+                
+                <hr>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <a href="{% url 'accounts:user_detail' item.user.username %}" class="text-decoration-none">
+                        {% if item.user.profile.avatar %}
+                            <img src="{{ item.user.profile.avatar.url }}" alt="卖家头像" class="rounded-circle mr-2" style="width: 40px; height: 40px;">
+                        {% else %}
+                            <img src="https://via.placeholder.com/40" alt="默认头像" class="rounded-circle mr-2">
+                        {% endif %}
+                        <span>{{ item.user.username }}</span>
+                    </a>
+                    
+                    {% if user.is_authenticated and user != item.user %}
+                        <a href="{% url 'marketplace:send_message' item.user.id %}" class="btn btn-sm btn-outline-primary ml-auto">
+                            <i class="fas fa-envelope mr-1"></i>联系卖家
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= item.user.profile.rating %}
+                            <i class="fas fa-star text-warning"></i>
+                        {% else %}
+                            <i class="far fa-star text-warning"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="ml-2">{{ item.user.profile.rating|floatformat:1 }}</span>
+                </div>
+                
+                <div class="d-flex mb-3">
+                    {% if user.is_authenticated and user != item.user %}
+                        {% if item.status == 'available' %}
+                            <a href="{% url 'marketplace:create_transaction' item.id %}" class="btn btn-success flex-grow-1 mr-2">
+                                <i class="fas fa-shopping-cart mr-1"></i>立即购买
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary flex-grow-1 mr-2" disabled>
+                                <i class="fas fa-ban mr-1"></i>
+                                {% if item.status == 'sold' %}已售出{% elif item.status == 'reserved' %}已预订{% else %}已下架{% endif %}
+                            </button>
+                        {% endif %}
+                        
+                        <button id="favoriteBtn" class="btn {% if is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %}" data-item-id="{{ item.id }}">
+                            <i class="{% if is_favorite %}fas{% else %}far{% endif %} fa-heart"></i>
+                        </button>
+                    {% elif user.is_authenticated and user == item.user %}
+                        <a href="{% url 'marketplace:item_update' item.id %}" class="btn btn-primary flex-grow-1 mr-2">
+                            <i class="fas fa-edit mr-1"></i>编辑商品
+                        </a>
+                        <a href="{% url 'marketplace:item_delete' item.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash-alt mr-1"></i>删除
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-sign-in-alt mr-1"></i>登录后购买
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">商品描述</h4>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ item.description|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 相关商品 -->
+{% if related_items %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h3 class="mb-3">相关商品</h3>
+    </div>
+    
+    {% for related_item in related_items %}
+    <div class="col-md-3 col-6 mb-4">
+        <div class="card h-100">
+            {% if related_item.images.first %}
+                <img src="{{ related_item.images.first.image.url }}" class="card-img-top" alt="{{ related_item.title }}" style="height: 180px; object-fit: cover;">
+            {% else %}
+                <img src="https://via.placeholder.com/300x180?text=无图片" class="card-img-top" alt="无图片">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title text-truncate">{{ related_item.title }}</h5>
+                <p class="card-text text-danger">¥{{ related_item.price }}</p>
+                <p class="card-text text-muted small">
+                    <i class="fas fa-user mr-1"></i>{{ related_item.user.username }}
+                    <span class="float-right"><i class="far fa-clock mr-1"></i>{{ related_item.created_at|date:"m-d" }}</span>
+                </p>
+            </div>
+            <div class="card-footer bg-white">
+                <a href="{% url 'marketplace:item_detail' related_item.id %}" class="btn btn-sm btn-primary btn-block">查看详情</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // 收藏功能
+        $('#favoriteBtn').click(function() {
+            const itemId = $(this).data('item-id');
+            $.ajax({
+                url: `/items/${itemId}/favorite/`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.is_favorite) {
+                        $('#favoriteBtn').removeClass('btn-outline-danger').addClass('btn-danger');
+                        $('#favoriteBtn i').removeClass('far').addClass('fas');
+                    } else {
+                        $('#favoriteBtn').removeClass('btn-danger').addClass('btn-outline-danger');
+                        $('#favoriteBtn i').removeClass('fas').addClass('far');
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
